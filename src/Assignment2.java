@@ -20,14 +20,14 @@ import java.util.logging.Logger;
 public class Assignment2 {
 
     public static final String currentDirectory = System.getProperty("user.dir");
-    public static final String hamTrainingDataDir = currentDirectory + "/train/ham/";
-//    public static final String hamTrainingDataDir = currentDirectory + "/TestTraining/ham/";
-    public static final String hamTestDataDir = currentDirectory + "/test/ham/";
-//    public static final String hamTestDataDir = currentDirectory + "/TestTest/ham/";
-    public static final String spamTrainingDataDir = currentDirectory + "/train/spam/";
-//    public static final String spamTrainingDataDir = currentDirectory + "/TestTraining/spam/";
-    public static final String spamTestDataDir = currentDirectory + "/test/spam/";
-//    public static final String spamTestDataDir = currentDirectory + "/TestTest/spam/";
+//    public static final String hamTrainingDataDir = currentDirectory + "/train/ham/";
+    public static final String hamTrainingDataDir = currentDirectory + "/TestTraining/ham/";
+//    public static final String hamTestDataDir = currentDirectory + "/test/ham/";
+    public static final String hamTestDataDir = currentDirectory + "/TestTest/ham/";
+//    public static final String spamTrainingDataDir = currentDirectory + "/train/spam/";
+    public static final String spamTrainingDataDir = currentDirectory + "/TestTraining/spam/";
+//    public static final String spamTestDataDir = currentDirectory + "/test/spam/";
+    public static final String spamTestDataDir = currentDirectory + "/TestTest/spam/";
     public static final String hamClassString = "ham";
     public static final String spamClassString = "spam";
 
@@ -123,6 +123,12 @@ public class Assignment2 {
         
         
         //Logistic Regression Classifier
+        LogisticRegression logisticRegressionClassifier = new LogisticRegression(vocabulary, nHam, nSpam, n, classes);
+        try {
+            logisticRegressionClassifier.trainLogisticClassifier();
+        } catch (IOException ex) {
+            Logger.getLogger(Assignment2.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
 }
