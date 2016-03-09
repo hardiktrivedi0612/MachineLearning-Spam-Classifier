@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -26,9 +27,11 @@ public class LogisticRegression {
     ArrayList<Double[]> wList;
     double lambda = 0.1;
     double eta = 0.01;
-    int gradientAscentIterations = 1;
+    int gradientAscentIterations = 2;
+    List<HashMap<String, Integer>> X;
+    List<String> Y;
 
-    public LogisticRegression(HashSet<String> vocabulary, int nHam, int nSpam, int n, ArrayList<String> classes) {
+    public LogisticRegression(HashSet<String> vocabulary, int nHam, int nSpam, int n, ArrayList<String> classes) throws FileNotFoundException, IOException {
         this.vocabulary = vocabulary;
         this.nHam = nHam;
         this.nSpam = nSpam;
@@ -44,96 +47,146 @@ public class LogisticRegression {
             }
             wList.add(w);
         }
-        Tct = new HashMap<>();
-        for (String term : vocabulary) {
-            Tct.put(term, 0);
+        X = new ArrayList<>();
+        Y = new ArrayList<>();
+        int count = 0;
+        BufferedReader reader = null;
+        File hamTrainingFolder = new File(Assignment2.hamTrainingDataDir);
+        for (File hamTextFile : hamTrainingFolder.listFiles()) {
+            Tct = new HashMap<>();
+            for (String term : vocabulary) {
+                Tct.put(term, 0);
+            }
+//            System.out.println("reading file ===>" + hamTextFile.getName());
+            reader = new BufferedReader(new FileReader(hamTextFile));
+            String line = reader.readLine();
+            while (line != null) {
+                String terms[] = line.split(" ");
+                for (String term : terms) {
+                    Tct.put(term, Tct.get(term) + 1);
+                }
+                line = reader.readLine();
+            }
+
+            X.add(Tct);
+            Y.add(Assignment2.hamClassString);
+        }
+        File spamTrainingFolder = new File(Assignment2.spamTrainingDataDir);
+        for (File spamTextFile : spamTrainingFolder.listFiles()) {
+            Tct = new HashMap<>();
+            for (String term : vocabulary) {
+                Tct.put(term, 0);
+            }
+//            System.out.println("reading file ===>" + spamTextFile.getName());
+            reader = new BufferedReader(new FileReader(spamTextFile));
+            String line = reader.readLine();
+            while (line != null) {
+                String terms[] = line.split(" ");
+                for (String term : terms) {
+                    Tct.put(term, Tct.get(term) + 1);
+                }
+                line = reader.readLine();
+            }
+            X.add(Tct);
+            Y.add(Assignment2.spamClassString);
         }
     }
 
     public void trainLogisticClassifier() throws FileNotFoundException, IOException {
+
         for (String className : classes) {
-            //Estimating wi 
+            //Estimating parameters for each
+            int iterations = gradientAscentIterations;
+            do {
+                double[] prob = new double[n];
+                for (int i = 0; i < n; i++) {
+                    prob[i] = estimate(X.get(i), className);
+                }
+                System.out.println("Estimates===>");
+                for (Double d : prob) {
+                    System.out.print(d + "\t");
+                }
+                System.out.println("");
+                System.out.println("");
 
-            for (int i = 0; i < gradientAscentIterations; i++) {
-                for (int j = 1; j < vocabulary.size() + 1; j++) {
-                    double total = 0;
-
-                    BufferedReader reader = null;
-                    File hamTrainingFolder = new File(Assignment2.hamTrainingDataDir);
-                    for (File hamTextFile : hamTrainingFolder.listFiles()) {
-                        System.out.println("reading file ===>" + hamTextFile.getName());
-                        reader = new BufferedReader(new FileReader(hamTextFile));
-                        String line = reader.readLine();
-                        while (line != null) {
-                            String terms[] = line.split(" ");
-                            for (String term : terms) {
-                                Tct.put(term, Tct.get(term) + 1);
-                            }
-                            line = reader.readLine();
-                        }
-
-                        double estimate = estimate(Tct, className);
-                        int delta = (className.equals(Assignment2.hamClassString)) ? 1 : 0;
-
-                        for (String key : Tct.keySet()) {
-                            total += (Tct.get(key) * (delta - estimate));
-                        }
-
-                        //Make Tct zero again
-                        for (String term : vocabulary) {
-                            Tct.put(term, 0);
-                        }
+                double gradient[] = new double[vocabulary.size()];
+                int i = 0;
+                for (String key : vocabulary) {
+                    gradient[i] = 0;
+                    for (int j = 0; j < n; j++) {
+                        int delta = (className.equals(Y.get(j))) ? 1 : 0;
+                        gradient[i] += ((double) X.get(j).get(key) * ((double) delta - prob[j]));
                     }
-                    File spamTrainingFolder = new File(Assignment2.spamTrainingDataDir);
-                    for (File spamTextFile : spamTrainingFolder.listFiles()) {
-                        reader = new BufferedReader(new FileReader(spamTextFile));
-                        String line = reader.readLine();
-                        while (line != null) {
-                            String terms[] = line.split(" ");
-                            for (String term : terms) {
-                                Tct.put(term, Tct.get(term) + 1);
-                            }
-                            line = reader.readLine();
-                        }
-                        double estimate = estimate(Tct, className);
-                        int delta = (className.equals(Assignment2.spamClassString)) ? 1 : 0;
-
-                        for (String key : Tct.keySet()) {
-                            total += (Tct.get(key) * (delta - estimate));
-                        }
-                        //Make Tct zero again
-                        for (String term : vocabulary) {
-                            Tct.put(term, 0);
-                        }
+                    gradient[i] -= ((double) lambda * wList.get(classes.indexOf(className))[i]);
+                    wList.get(classes.indexOf(className))[i] += ((double) eta * gradient[i]);
+                    i++;
+                    if (i == vocabulary.size()) {
+                        break;
                     }
-                    wList.get(classes.indexOf(className))[j] = wList.get(classes.indexOf(className))[j] + (eta * total) - (lambda * eta * wList.get(classes.indexOf(className))[j]);
+                }
+//                for (Double[] w : wList) {
+//                    for (int j = 0; j < w.length; j++) {
+//                        System.out.print(w[j] + "\t");
+//                    }
+//                    System.out.println("");
+//                    System.out.println("");
+//                }
+//                System.out.println("");
+//                System.out.println("");
+            } while (--iterations > 0);
+        }
+    }
+
+    private double estimate(HashMap<String, Integer> X, String className) {
+        double parameterValue = wList.get(classes.indexOf(className))[0];
+
+        int i = 1;
+        for (String key : vocabulary) {
+            parameterValue += (wList.get(classes.indexOf(className))[i++] * (double) X.get(key));
+        }
+
+//        System.out.println("Param Value = " + parameterValue);
+        double expVal = Math.exp(parameterValue);
+//        System.out.println("Estimate = " + ((double) expVal / ((double) 1 + expVal)));
+        return ((double) expVal / ((double) 1 + expVal));
+    }
+
+    public String applyLogisticRegressionClassifier(BufferedReader documentReader) throws IOException {
+        if (documentReader == null) {
+            return null;
+        }
+
+        Tct = new HashMap<>();
+        for (String term : vocabulary) {
+            Tct.put(term, 0);
+        }
+        String line = documentReader.readLine();
+        while (line != null) {
+            String terms[] = line.split(" ");
+            for (String term : terms) {
+                if (vocabulary.contains(term)) {
+                    Tct.put(term, Tct.get(term) + 1);
                 }
             }
+            line = documentReader.readLine();
         }
-        for(Double[] w : wList) {
-            for (int i = 0; i < w.length; i++) {
-                System.out.print(w[i]+"\t");
-            }
-            System.out.println("");
-        }
-    }
 
-    private double estimate(HashMap<String, Integer> Tct, String className) {
-        if (className.equals(Assignment2.hamClassString)) {
-            double parameterValue = wList.get(0)[0];
-            for (int i = 1; i < vocabulary.size() + 1; i++) {
-                parameterValue += (wList.get(0)[i] * Tct.get((String) vocabulary.toArray()[i - 1]));
-            }
-            double expVal = Math.pow(Math.E, (parameterValue));
-            return ((double) 1 / ((double) 1 + expVal));
-        } else {
-            double parameterValue = wList.get(1)[0];
-            for (int i = 1; i < vocabulary.size() + 1; i++) {
-                parameterValue += (wList.get(1)[i] * Tct.get((String) vocabulary.toArray()[i - 1]));
-            }
-            double expVal = Math.pow(Math.E, (parameterValue));
-            return (expVal / ((double) 1 + expVal));
+        double prob[] = new double[classes.size()];
+        int i = 0;
+        for (String className : classes) {
+            prob[i] = estimate(Tct, className);
+            i++;
         }
+
+        int index = 0;
+        double max = prob[0];
+        for (int j = 0; j < prob.length; j++) {
+            if (prob[j] > max) {
+                max = prob[j];
+                index = j;
+            }
+        }
+        return classes.get(index);
+
     }
-    
 }

@@ -88,8 +88,8 @@ public class Assignment2 {
         try {
             naiveBayesClassifier.trainMultinomialNB();
         } catch (IOException ex) {
-            Logger.getLogger(Assignment2.class.getName()).log(Level.SEVERE, null, ex);
             System.out.println("Error in training the data for the Naive Bayes classifier");
+            Logger.getLogger(Assignment2.class.getName()).log(Level.SEVERE, null, ex);
             return;
         }
         System.out.println("Training the Naive Bayes classifier was successful");
@@ -114,21 +114,50 @@ public class Assignment2 {
                 totalCount++;
             }
         } catch (Exception e) {
-            Logger.getLogger(Assignment2.class.getName()).log(Level.SEVERE, null, e);
             System.out.println("Error while testing data for Naive Bayes Classifier");
+            Logger.getLogger(Assignment2.class.getName()).log(Level.SEVERE, null, e);
             return;
         }
 
-        System.out.println("Accuracy of the classifier ===> " + ((double) correctlyClassified / (double) totalCount) * 100);
-        
-        
+        System.out.println("Accuracy of the Naive Bayes classifier ===> " + ((double) correctlyClassified / (double) totalCount) * 100);
+
         //Logistic Regression Classifier
-        LogisticRegression logisticRegressionClassifier = new LogisticRegression(vocabulary, nHam, nSpam, n, classes);
+        LogisticRegression logisticRegressionClassifier = null;
         try {
+            logisticRegressionClassifier = new LogisticRegression(vocabulary, nHam, nSpam, n, classes);
             logisticRegressionClassifier.trainLogisticClassifier();
+            System.out.println("Training the lLogistic Regression Classifier was successful");
         } catch (IOException ex) {
+
+            System.out.println("Error while training Logistic Regression Classifier");
             Logger.getLogger(Assignment2.class.getName()).log(Level.SEVERE, null, ex);
+            return;
         }
+        correctlyClassified = 0;
+        totalCount = 0;
+        try {
+            File hamTestFolder = new File(hamTestDataDir);
+            for (File hamTextFile : hamTestFolder.listFiles()) {
+                reader = new BufferedReader(new FileReader(hamTextFile));
+                if (logisticRegressionClassifier.applyLogisticRegressionClassifier(reader).equalsIgnoreCase(hamClassString)) {
+                    correctlyClassified++;
+                }
+                totalCount++;
+            }
+            File spamTestFolder = new File(spamTestDataDir);
+            for (File spamTextFile : spamTestFolder.listFiles()) {
+                reader = new BufferedReader(new FileReader(spamTextFile));
+                if (logisticRegressionClassifier.applyLogisticRegressionClassifier(reader).equalsIgnoreCase(spamClassString)) {
+                    correctlyClassified++;
+                }
+                totalCount++;
+            }
+        } catch (Exception e) {
+            Logger.getLogger(Assignment2.class.getName()).log(Level.SEVERE, null, e);
+            System.out.println("Error while testing data for Logistic Regression Classifier");
+            return;
+        }
+        System.out.println("Accuracy of the Logistic Regression classifier ===> " + ((double) correctlyClassified / (double) totalCount) * 100);
     }
 
 }
