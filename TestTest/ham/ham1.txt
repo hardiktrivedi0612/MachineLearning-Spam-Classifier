@@ -1,1 +1,1 @@
-a b x z y c z
+a b c a a c a
