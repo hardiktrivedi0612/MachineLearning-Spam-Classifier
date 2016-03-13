@@ -60,7 +60,9 @@ public class MultinomialNaiveBayes {
                     while (line != null) {
                         String terms[] = line.split(" ");
                         for (String term : terms) {
-                            Tct.put(term, Tct.get(term) + 1);
+                            if (vocabulary.contains(term)) {
+                                Tct.put(term, Tct.get(term) + 1);
+                            }
                         }
                         line = reader.readLine();
                     }
@@ -73,7 +75,9 @@ public class MultinomialNaiveBayes {
                     while (line != null) {
                         String terms[] = line.split(" ");
                         for (String term : terms) {
-                            Tct.put(term, Tct.get(term) + 1);
+                            if (vocabulary.contains(term)) {
+                                Tct.put(term, Tct.get(term) + 1);
+                            }
                         }
                         line = reader.readLine();
                     }
@@ -130,7 +134,6 @@ public class MultinomialNaiveBayes {
                 index = i;
             }
         }
-
 
         return classes.get(index);
     }

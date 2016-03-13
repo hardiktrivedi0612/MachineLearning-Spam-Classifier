@@ -1,9 +1,11 @@
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,16 +33,33 @@ public class Assignment2 {
     public static final String hamClassString = "ham";
     public static final String spamClassString = "spam";
 
+    public static final String stopwordsFileName = "StopWords.txt";
+
     public static void main(String[] args) {
 
         //Defining the classes
-        ArrayList<String> classes = new ArrayList<String>();
+        ArrayList<String> classes = new ArrayList<>();
         classes.add(hamClassString);
         classes.add(spamClassString);
 
+        HashSet<String> stopWords = new HashSet<>();
+        try {
+            File stopWordsFile = new File(currentDirectory + "/" + stopwordsFileName);
+            BufferedReader stopWordsReader = new BufferedReader(new FileReader(stopWordsFile));
+            String stopWord = stopWordsReader.readLine();
+            while (stopWord != null) {
+                String words[] = stopWord.split(" ");
+                stopWords.addAll(Arrays.asList(words));
+                stopWord = stopWordsReader.readLine();
+            }
+        } catch (Exception ex) {
+            System.out.println("Error reading the stopwords file. Please make sure that the file is in the same folder as the java files.");
+            Logger.getLogger(Assignment2.class.getName()).log(Level.SEVERE, null, ex);
+        }
         //Multinomial Naive Bayes
         //Creating the vocabulary of training data
-        HashSet<String> vocabulary = new HashSet<String>();
+        HashSet<String> vocabularyWithStopWords = new HashSet<String>();
+        HashSet<String> vocabularyWithoutStopWords = new HashSet<String>();
         BufferedReader reader = null;
         int nHam = 0, nSpam = 0, n = 0;
         try {
@@ -51,8 +70,11 @@ public class Assignment2 {
                 while (line != null) {
                     String terms[] = line.split(" ");
                     for (String term : terms) {
-                        if (!vocabulary.contains(term)) {
-                            vocabulary.add(term);
+                        if (!vocabularyWithStopWords.contains(term)) {
+                            vocabularyWithStopWords.add(term);
+                        }
+                        if (!vocabularyWithoutStopWords.contains(term) && !stopWords.contains(term)) {
+                            vocabularyWithoutStopWords.add(term);
                         }
                     }
                     line = reader.readLine();
@@ -67,8 +89,11 @@ public class Assignment2 {
                 while (line != null) {
                     String terms[] = line.split(" ");
                     for (String term : terms) {
-                        if (!vocabulary.contains(term)) {
-                            vocabulary.add(term);
+                        if (!vocabularyWithStopWords.contains(term)) {
+                            vocabularyWithStopWords.add(term);
+                        }
+                        if (!vocabularyWithoutStopWords.contains(term) && !stopWords.contains(term)) {
+                            vocabularyWithoutStopWords.add(term);
                         }
                     }
                     line = reader.readLine();
@@ -84,7 +109,9 @@ public class Assignment2 {
         //vocabulary successfully created
         System.out.println("Vocabulary successfully created");
 
-        MultinomialNaiveBayes naiveBayesClassifier = new MultinomialNaiveBayes(vocabulary, nHam, nSpam, n, classes);
+//        MultinomialNaiveBayes naiveBayesClassifier = new MultinomialNaiveBayes(vocabularyWithStopWords, nHam, nSpam, n, classes);
+        MultinomialNaiveBayes naiveBayesClassifier = new MultinomialNaiveBayes(vocabularyWithoutStopWords, nHam, nSpam, n, classes);
+
         try {
             naiveBayesClassifier.trainMultinomialNB();
         } catch (IOException ex) {
@@ -125,7 +152,10 @@ public class Assignment2 {
         LogisticRegression logisticRegressionClassifier = null;
         try {
             System.out.println("Creating data for logistic classifier");
-            logisticRegressionClassifier = new LogisticRegression(vocabulary, nHam, nSpam, n, classes);
+            
+//            logisticRegressionClassifier = new LogisticRegression(vocabularyWithStopWords, nHam, nSpam, n, classes);
+            logisticRegressionClassifier = new LogisticRegression(vocabularyWithoutStopWords, nHam, nSpam, n, classes);
+
             System.out.println("Data Creation complete. Starting training of Logistic Regression classifier");
             logisticRegressionClassifier.trainLogisticClassifier();
             System.out.println("Training the Logistic Regression Classifier was successful");
