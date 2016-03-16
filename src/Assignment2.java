@@ -109,8 +109,8 @@ public class Assignment2 {
         //vocabulary successfully created
         System.out.println("Vocabulary successfully created");
 
-//        MultinomialNaiveBayes naiveBayesClassifier = new MultinomialNaiveBayes(vocabularyWithStopWords, nHam, nSpam, n, classes);
-        MultinomialNaiveBayes naiveBayesClassifier = new MultinomialNaiveBayes(vocabularyWithoutStopWords, nHam, nSpam, n, classes);
+        MultinomialNaiveBayes naiveBayesClassifier = new MultinomialNaiveBayes(vocabularyWithStopWords, nHam, nSpam, n, classes);
+//        MultinomialNaiveBayes naiveBayesClassifier = new MultinomialNaiveBayes(vocabularyWithoutStopWords, nHam, nSpam, n, classes);
 
         try {
             naiveBayesClassifier.trainMultinomialNB();
